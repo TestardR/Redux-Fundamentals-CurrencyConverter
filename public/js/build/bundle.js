@@ -2111,7 +2111,9 @@ var _keymirror2 = _interopRequireDefault(_keymirror);
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 var ActionTypes = exports.ActionTypes = (0, _keymirror2.default)({
-  CHANGE_ORIGIN_AMOUNT: null
+  CHANGE_ORIGIN_AMOUNT: null,
+  CHANGE_ORIGIN_CURRENCY: null,
+  CHANGE_DESTINATION_CURRENCY: null
 });
 
 console.log('ActionTypes', ActionTypes);
@@ -4313,6 +4315,8 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 exports.changeOriginAmount = changeOriginAmount;
+exports.changeOriginCurrency = changeOriginCurrency;
+exports.changeDestCurrency = changeDestCurrency;
 exports.fetchConversionRate = fetchConversionRate;
 exports.fetchFees = fetchFees;
 
@@ -4332,6 +4336,20 @@ function changeOriginAmount(newAmount) {
   return {
     type: _constants.ActionTypes.CHANGE_ORIGIN_AMOUNT,
     data: { newAmount: newAmount }
+  };
+}
+
+function changeOriginCurrency(newCurrency) {
+  return {
+    type: _constants.ActionTypes.CHANGE_ORIGIN_CURRENCY,
+    data: { newCurrency: newCurrency }
+  };
+}
+
+function changeDestCurrency(newCurrency) {
+  return {
+    type: _constants.ActionTypes.CHANGE_DESTINATION_CURRENCY,
+    data: { newCurrency: newCurrency }
   };
 }
 
@@ -4559,9 +4577,9 @@ var Conversion = function (_React$Component) {
 
     _this.state = {
       //   originAmount: '0.00',
-      originCurrency: 'USD',
+      // originCurrency: 'USD',
       // destinationAmount: '0.00',
-      destinationCurrency: 'EUR',
+      // destinationCurrency: 'EUR',
       // feeAmount: 0.0,
       // conversionRate: 1.5,
       // totalCost: 0.0,
@@ -4571,8 +4589,8 @@ var Conversion = function (_React$Component) {
     // bind event listeners so 'this' will be available in the handlers
     _this.handleOriginAmountChange = _this.handleOriginAmountChange.bind(_this);
     _this.handleDestAmountChange = _this.handleDestAmountChange.bind(_this);
-    _this.handleOriginCurrencyChange = _this.handleCurrencyChange.bind(_this, 'origin');
-    _this.handleDestCurrencyChange = _this.handleCurrencyChange.bind(_this, 'destination');
+    _this.handleOriginCurrencyChange = _this.handleOriginCurrencyChange.bind(_this);
+    _this.handleDestCurrencyChange = _this.handleDestCurrencyChange.bind(_this);
     _this.handleAjaxFailure = _this.handleAjaxFailure.bind(_this);
     return _this;
   }
@@ -4614,6 +4632,52 @@ var Conversion = function (_React$Component) {
       }
     }
   }, {
+    key: 'handleOriginCurrencyChange',
+    value: function handleOriginCurrencyChange(event) {
+      var newCurrency = event.target.value;
+      this.props.dispatch(actions.changeOriginCurrency(newCurrency));
+
+      var payload = {
+        originAmount: this.props.originAmount,
+        originCurrency: newCurrency,
+        destCurrency: this.props.destinationCurrency,
+        calcOriginAmount: false
+      };
+
+      this.props.dispatch(actions.fetchConversionRate(payload));
+
+      var feePayload = {
+        originAmount: this.props.originAmount,
+        originCurrency: newCurrency,
+        destCurrency: this.props.destinationCurrency
+      };
+
+      this.props.dispatch(actions.fetchFees(feePayload));
+    }
+  }, {
+    key: 'handleDestCurrencyChange',
+    value: function handleDestCurrencyChange(event) {
+      var newCurrency = event.target.value;
+      this.props.dispatch(actions.changeDestCurrency(newCurrency));
+
+      var payload = {
+        originAmount: this.props.originAmount,
+        originCurrency: this.props.originCurrency,
+        destCurrency: newCurrency,
+        calcOriginAmount: false
+      };
+
+      this.props.dispatch(actions.fetchConversionRate(payload));
+
+      var feePayload = {
+        originAmount: this.props.originAmount,
+        originCurrency: this.props.originCurrency,
+        destCurrency: newCurrency
+      };
+
+      this.props.dispatch(actions.fetchFees(feePayload));
+    }
+  }, {
     key: 'handleCurrencyChange',
     value: function handleCurrencyChange(currentlyEditing, event) {
       var _this2 = this;
@@ -4643,8 +4707,8 @@ var Conversion = function (_React$Component) {
           // get the new fee & total amount
           _this2.makeFeeAjaxCall({
             originAmount: resp.originAmount,
-            originCurrency: _this2.state.originCurrency,
-            destCurrency: _this2.state.destinationCurrency
+            originCurrency: _this2.props.originCurrency,
+            destCurrency: _this2.props.destinationCurrency
           }, function (response) {
             _this2.setState({
               feeAmount: response.feeAmount
@@ -4668,8 +4732,8 @@ var Conversion = function (_React$Component) {
 
       var payload = {
         originAmount: newAmount,
-        originCurrency: this.state.originCurrency,
-        destCurrency: this.state.destinationCurrency,
+        originCurrency: this.props.originCurrency,
+        destCurrency: this.props.destinationCurrency,
         calcOriginAmount: false
       };
 
@@ -4677,8 +4741,8 @@ var Conversion = function (_React$Component) {
 
       var feePayload = {
         originAmount: newAmount,
-        originCurrency: this.state.originCurrency,
-        destCurrency: this.state.destinationCurrency
+        originCurrency: this.props.originCurrency,
+        destCurrency: this.props.destinationCurrency
       };
 
       this.props.dispatch(actions.fetchFees(feePayload));
@@ -4710,8 +4774,8 @@ var Conversion = function (_React$Component) {
         // get the new fee & total amount
         _this3.makeFeeAjaxCall({
           originAmount: resp.originAmount,
-          originCurrency: _this3.state.originCurrency,
-          destCurrency: _this3.state.destinationCurrency
+          originCurrency: _this3.props.originCurrency,
+          destCurrency: _this3.props.destinationCurrency
         }, function (resp) {
           _this3.setState({
             feeAmount: resp.feeAmount
@@ -4726,8 +4790,8 @@ var Conversion = function (_React$Component) {
   }, {
     key: '_makeConversionAjaxCall',
     value: function _makeConversionAjaxCall(data, successCallback, failureCallback) {
-      var originCurrency = this.state.originCurrency;
-      var destCurrency = this.state.destinationCurrency;
+      var originCurrency = this.props.originCurrency;
+      var destCurrency = this.props.destinationCurrency;
 
       var payload = {
         originAmount: data.newValue || this.props.originAmount,
@@ -4800,7 +4864,7 @@ var Conversion = function (_React$Component) {
         _react2.default.createElement(
           'select',
           {
-            value: this.state.originCurrency,
+            value: this.props.originCurrency,
             onChange: this.handleOriginCurrencyChange
           },
           _react2.default.createElement(
@@ -4830,7 +4894,7 @@ var Conversion = function (_React$Component) {
         _react2.default.createElement(
           'select',
           {
-            value: this.state.destinationCurrency,
+            value: this.props.destinationCurrency,
             onChange: this.handleDestCurrencyChange
           },
           _react2.default.createElement(
@@ -4853,8 +4917,8 @@ var Conversion = function (_React$Component) {
         _react2.default.createElement('br', null),
         _react2.default.createElement('br', null),
         _react2.default.createElement(_FeesTable2.default, {
-          originCurrency: this.state.originCurrency,
-          destinationCurrency: this.state.destinationCurrency,
+          originCurrency: this.props.originCurrency,
+          destinationCurrency: this.props.destinationCurrency,
           conversionRate: this.props.conversionRate,
           fee: this.props.feeAmount,
           total: this.props.totalCost
@@ -4871,6 +4935,8 @@ exports.default = (0, _reactRedux.connect)(function (state, props) {
   return {
     originAmount: state.amount.originAmount,
     destinationAmount: state.amount.destinationAmount,
+    originCurrency: state.amount.originCurrency,
+    destinationCurrency: state.amount.destinationCurrency,
     conversionRate: state.amount.conversionRate,
     feeAmount: state.amount.feeAmount,
     totalCost: state.amount.totalCost
@@ -4895,6 +4961,8 @@ var _constants = __webpack_require__(24);
 var defaultState = {
   originAmount: '0.00',
   destinationAmount: '0.00',
+  originCurrency: 'USD',
+  destinationCurrency: 'EUR',
   conversionRate: 1.5,
   feeAmount: 0.0,
   totalCost: 0.0
@@ -4908,6 +4976,14 @@ function amount() {
     case 'CHANGE_ORIGIN_AMOUNT':
       return _extends({}, state, {
         originAmount: action.data.newAmount
+      });
+    case _constants.ActionTypes.CHANGE_ORIGIN_CURRENCY:
+      return _extends({}, state, {
+        originCurrency: action.data.newCurrency
+      });
+    case _constants.ActionTypes.CHANGE_DESTINATION_CURRENCY:
+      return _extends({}, state, {
+        destinationCurrency: action.data.newCurrency
       });
     case 'RECEIVED_CONVERSION_RATE_SUCCESS':
       return _extends({}, state, {

@@ -10,6 +10,20 @@ export function changeOriginAmount(newAmount) {
   };
 }
 
+export function changeOriginCurrency(newCurrency) {
+  return {
+    type: types.CHANGE_ORIGIN_CURRENCY,
+    data: { newCurrency: newCurrency }
+  };
+}
+
+export function changeDestCurrency(newCurrency) {
+  return {
+    type: types.CHANGE_DESTINATION_CURRENCY,
+    data: { newCurrency: newCurrency }
+  };
+}
+
 export function fetchConversionRate(payload) {
   return dispatch => {
     makeConversionAjaxCall(payload, dispatch);

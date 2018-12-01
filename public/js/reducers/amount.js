@@ -3,6 +3,8 @@ import { ActionTypes as types } from '../constants';
 var defaultState = {
   originAmount: '0.00',
   destinationAmount: '0.00',
+  originCurrency: 'USD',
+  destinationCurrency: 'EUR',
   conversionRate: 1.5,
   feeAmount: 0.0,
   totalCost: 0.0
@@ -14,6 +16,16 @@ function amount(state = defaultState, action) {
       return {
         ...state,
         originAmount: action.data.newAmount
+      };
+    case types.CHANGE_ORIGIN_CURRENCY:
+      return {
+        ...state,
+        originCurrency: action.data.newCurrency
+      };
+    case types.CHANGE_DESTINATION_CURRENCY:
+      return {
+        ...state,
+        destinationCurrency: action.data.newCurrency
       };
     case 'RECEIVED_CONVERSION_RATE_SUCCESS':
       return {

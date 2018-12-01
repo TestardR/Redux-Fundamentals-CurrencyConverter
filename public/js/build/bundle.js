@@ -63,7 +63,7 @@
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 105);
+/******/ 	return __webpack_require__(__webpack_require__.s = 106);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -2323,7 +2323,7 @@ if (process.env.NODE_ENV !== 'production') {
 
 "use strict";
 /* WEBPACK VAR INJECTION */(function(process) {Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_symbol_observable__ = __webpack_require__(102);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_symbol_observable__ = __webpack_require__(103);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "createStore", function() { return createStore; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "combineReducers", function() { return combineReducers; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "bindActionCreators", function() { return bindActionCreators; });
@@ -4071,10 +4071,10 @@ var Conversion = function (_React$Component) {
     _this.state = {
       //   originAmount: '0.00',
       originCurrency: 'USD',
-      destinationAmount: '0.00',
+      // destinationAmount: '0.00',
       destinationCurrency: 'EUR',
       feeAmount: 0.0,
-      conversionRate: 1.5,
+      // conversionRate: 1.5,
       totalCost: 0.0,
       errorMsg: ''
     };
@@ -4147,7 +4147,7 @@ var Conversion = function (_React$Component) {
           _this2.setState({
             originAmount: resp.originAmount,
             // destinationAmount: resp.destAmount,
-            destinationAmount: _this2.state.destinationAmount,
+            destinationAmount: _this2.props.destinationAmount,
             conversionRate: resp.xRate
           });
 
@@ -4182,20 +4182,34 @@ var Conversion = function (_React$Component) {
         data: { newAmount: newAmount }
       });
 
+      // this.props.dispatch(function(dispatch) {
+      //   dispatch({ type: 'SOME_ACTION', data: 'someData' });
+      //   setTimeout(function() {
+      //     dispatch({ type: 'CHANGE_ORIGIN_AMOUNT', data: { newAmount: '5000' } });
+      //   }, 3000);
+      // });
+
       // this.setState({ originAmount: newAmount });
 
-      // get the new dest amount
-      this.makeConversionAjaxCall({
-        currentlyEditing: 'origin',
-        newValue: newAmount
-      }, function (resp) {
-        _this3.clearErrorMessage();
+      this.props.dispatch(function (dispatch) {
+        var payload = {
+          currentlyEditing: 'origin',
+          newValue: newAmount
+        };
 
-        _this3.setState({
-          conversionRate: resp.xRate,
-          destinationAmount: resp.destAmount
-        });
-      }, this.handleAjaxFailure);
+        dispatch({ type: 'REQUEST_CONVERSION_RATE', data: payload });
+        // get the new dest amount
+        _this3.makeConversionAjaxCall(payload, function (resp) {
+          _this3.clearErrorMessage();
+
+          dispatch({ type: 'RECEIVED_CONVERSION_RATE', data: resp });
+
+          // this.setState({
+          //   conversionRate: resp.xRate,
+          //   destinationAmount: resp.destAmount
+          // });
+        }, _this3.handleAjaxFailure);
+      });
 
       // get the new fee & total amount
       this.makeFeeAjaxCall({
@@ -4351,7 +4365,7 @@ var Conversion = function (_React$Component) {
         _react2.default.createElement('input', {
           className: 'amount-field',
           onChange: this.handleDestAmountChange,
-          value: this.state.destinationAmount
+          value: this.props.destinationAmount
         }),
         '\xA0',
         _react2.default.createElement(
@@ -4382,7 +4396,7 @@ var Conversion = function (_React$Component) {
         _react2.default.createElement(_FeesTable2.default, {
           originCurrency: this.state.originCurrency,
           destinationCurrency: this.state.destinationCurrency,
-          conversionRate: this.state.conversionRate,
+          conversionRate: this.props.conversionRate,
           fee: this.state.feeAmount,
           total: this.state.totalCost
         })
@@ -4395,7 +4409,9 @@ var Conversion = function (_React$Component) {
 
 exports.default = (0, _reactRedux.connect)(function (state, props) {
   return {
-    originAmount: state.originAmount
+    originAmount: state.originAmount,
+    destinationAmount: state.destinationAmount,
+    conversionRate: state.conversionRate
   };
 })(Conversion);
 
@@ -4416,9 +4432,7 @@ var _redux = __webpack_require__(36);
 
 var _reduxLogger = __webpack_require__(101);
 
-var _reduxLogger2 = _interopRequireDefault(_reduxLogger);
-
-var _reduxThunk = __webpack_require__(106);
+var _reduxThunk = __webpack_require__(102);
 
 var _reduxThunk2 = _interopRequireDefault(_reduxThunk);
 
@@ -4426,7 +4440,9 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 
 // state
 var defaultState = {
-  originAmount: '0.00'
+  originAmount: '0.00',
+  destinationAmount: '0.00',
+  conversionRate: 1.5
 };
 
 // reducer
@@ -4441,12 +4457,22 @@ function amount() {
     return _extends({}, state, {
       originAmount: action.data.newAmount
     });
+  } else if (action.type === 'RECEIVED_CONVERSION_RATE') {
+    return _extends({}, state, {
+      conversionRate: action.data.xRate,
+      destinationAmount: action.data.destAmount
+    });
   }
+
   return state;
 }
 
+var logger = (0, _reduxLogger.createLogger)({
+  collapsed: true
+});
+
 // Reduxstore (dataStore where the state is saved)
-var store = (0, _redux.createStore)(amount, (0, _redux.applyMiddleware)(_reduxLogger2.default));
+var store = (0, _redux.createStore)(amount, (0, _redux.applyMiddleware)(_reduxThunk2.default, logger));
 
 exports.default = store;
 
@@ -27542,7 +27568,34 @@ module.exports = ReactPropTypesSecret;
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* WEBPACK VAR INJECTION */(function(global, module) {/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__ponyfill_js__ = __webpack_require__(103);
+Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
+function createThunkMiddleware(extraArgument) {
+  return function (_ref) {
+    var dispatch = _ref.dispatch,
+        getState = _ref.getState;
+    return function (next) {
+      return function (action) {
+        if (typeof action === 'function') {
+          return action(dispatch, getState, extraArgument);
+        }
+
+        return next(action);
+      };
+    };
+  };
+}
+
+var thunk = createThunkMiddleware();
+thunk.withExtraArgument = createThunkMiddleware;
+
+/* harmony default export */ __webpack_exports__["default"] = thunk;
+
+/***/ }),
+/* 103 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* WEBPACK VAR INJECTION */(function(global, module) {/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__ponyfill_js__ = __webpack_require__(104);
 /* global window */
 
 
@@ -27563,10 +27616,10 @@ if (typeof self !== 'undefined') {
 var result = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__ponyfill_js__["a" /* default */])(root);
 /* harmony default export */ __webpack_exports__["a"] = result;
 
-/* WEBPACK VAR INJECTION */}.call(__webpack_exports__, __webpack_require__(15), __webpack_require__(104)(module)))
+/* WEBPACK VAR INJECTION */}.call(__webpack_exports__, __webpack_require__(15), __webpack_require__(105)(module)))
 
 /***/ }),
-/* 103 */
+/* 104 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -27591,7 +27644,7 @@ function symbolObservablePonyfill(root) {
 
 
 /***/ }),
-/* 104 */
+/* 105 */
 /***/ (function(module, exports) {
 
 module.exports = function(originalModule) {
@@ -27621,38 +27674,11 @@ module.exports = function(originalModule) {
 
 
 /***/ }),
-/* 105 */
+/* 106 */
 /***/ (function(module, exports, __webpack_require__) {
 
 module.exports = __webpack_require__(37);
 
-
-/***/ }),
-/* 106 */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
-function createThunkMiddleware(extraArgument) {
-  return function (_ref) {
-    var dispatch = _ref.dispatch,
-        getState = _ref.getState;
-    return function (next) {
-      return function (action) {
-        if (typeof action === 'function') {
-          return action(dispatch, getState, extraArgument);
-        }
-
-        return next(action);
-      };
-    };
-  };
-}
-
-var thunk = createThunkMiddleware();
-thunk.withExtraArgument = createThunkMiddleware;
-
-/* harmony default export */ __webpack_exports__["default"] = thunk;
 
 /***/ })
 /******/ ]);

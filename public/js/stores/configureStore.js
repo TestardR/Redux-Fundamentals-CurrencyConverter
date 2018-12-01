@@ -2,39 +2,49 @@ import { applyMiddleware, createStore } from 'redux';
 import { createLogger } from 'redux-logger';
 import thunk from 'redux-thunk';
 
-// state
+import { ActionTypes as types } from '../constants';
+
 var defaultState = {
   originAmount: '0.00',
   destinationAmount: '0.00',
-  conversionRate: 1.5
+  conversionRate: 1.5,
+  feeAmount: 0.0,
+  totalCost: 0.0
 };
 
-// reducer
 function amount(state = defaultState, action) {
-  if (action.type === 'CHANGE_ORIGIN_AMOUNT') {
-    // dont mutate the state, instead use Object.assign
-    // return Object.assign({}, state, { originAmount: action.data });
-    // same thing
-    return {
-      ...state,
-      originAmount: action.data.newAmount
-    };
-  } else if (action.type === 'RECEIVED_CONVERSION_RATE') {
-    return {
-      ...state,
-      conversionRate: action.data.xRate,
-      destinationAmount: action.data.destAmount
-    };
-  }
+  switch (action.type) {
+    case 'CHANGE_ORIGIN_AMOUNT':
+      return {
+        ...state,
+        originAmount: action.data.newAmount
+      };
+    case 'RECEIVED_CONVERSION_RATE_SUCCESS':
+      return {
+        ...state,
+        conversionRate: action.data.xRate,
+        destinationAmount: action.data.destAmount
+      };
+    case 'RECEIVED_FEES_SUCCESS':
+      var newFeeAmount = action.data.feeAmount;
+      var newTotal =
+        parseFloat(state.originAmount, 10) + parseFloat(newFeeAmount, 10);
 
-  return state;
+      return {
+        ...state,
+        feeAmount: newFeeAmount,
+        totalCost: newTotal
+      };
+
+    default:
+      return state;
+  }
 }
 
 var logger = createLogger({
   collapsed: true
 });
 
-// Reduxstore (dataStore where the state is saved)
 var store = createStore(amount, applyMiddleware(thunk, logger));
 
 export default store;
